@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">TodoListApp</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="task">Task</string>
+    <string name="task_title">Title</string>
+    <string name="task_description">Description</string>
+    <string name="task_date">Due Date</string>
+    <string name="priority">importance</string>
+    <string name="save">Save Changes</string>
+
+</resources>
