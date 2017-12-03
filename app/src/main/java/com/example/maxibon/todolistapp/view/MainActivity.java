@@ -34,32 +34,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         controller = new Controller();
-
-        try {
-            tasklist = controller.loadTasks(this.getApplication().getBaseContext());
-        } catch (Exception e){
-            //Toast.makeText("Problem resolivng database loading");
-        }
+        tasklist = controller.loadTasks(this.getApplication().getBaseContext());
 
         ListView sv = (ListView) findViewById(R.id.list_of_items);
         sv.setClickable(true);
         taskAddapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, tasklist);
         sv.setAdapter(taskAddapter);
 
-        //Button for viewing task details
-        sv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> arg0, View view, int position, long id) {
-                Intent it = new Intent(MainActivity.this, Pop.class);
+        //Long click listener for deleting an element from the task list
+         sv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                                           @Override
+                                           public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                       controller.remove(tasklist.get(position));
+                       tasklist.remove(position);
+                       taskAddapter.notifyDataSetChanged();
+                         return true;
 
-                String removeTitle = taskAddapter.getItem(position).getTitle();
-                String removeDescription = taskAddapter.getItem(position).getDescription();
-
-                controller.remove(new TaskDTO(removeTitle,removeDescription));
-                taskAddapter.notifyDataSetChanged();
-            }
-        });
-    }
-
+                   }
+               });
+        }
 
     /**
      * The action to preform after the results have come back from another activity,

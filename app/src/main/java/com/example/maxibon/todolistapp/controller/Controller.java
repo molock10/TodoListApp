@@ -117,8 +117,7 @@ public class Controller implements Serializable{
      */
     public ArrayList<TaskDTO> loadTasks(Context context){
 
-        //new JSONReader("database.json", context);
-                //new TaskRegistry().getTasks(file);
+        taskList = new TaskRegistry(context).getTasks();
         return taskList;
     }
 
@@ -131,7 +130,7 @@ public class Controller implements Serializable{
     public void storeTaskList(Context context){
 
         //new JSONWriter("database.json", context);
-        new TaskRegistry("database.json", context).storeTasks(taskList);
+        new TaskRegistry(context).storeTasks(taskList);
     }
 
 }

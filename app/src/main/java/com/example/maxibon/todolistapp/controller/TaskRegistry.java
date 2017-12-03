@@ -3,6 +3,7 @@ package com.example.maxibon.todolistapp.controller;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.JsonReader;
+import android.util.Log;
 
 import com.example.maxibon.todolistapp.model.TaskDTO;
 
@@ -30,75 +31,67 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by tmp-sda-1107 on 11/7/17.
+ * Created by Max Hudson on 11/7/17.
  */
 
 public class TaskRegistry {
 
-    String filename;
+    private final String filename = "database.json";
     Context myContext;
 
-    public TaskRegistry(String filename, Context context) {
-
-        this.filename = filename;
-        this.myContext = context;
+    public TaskRegistry(Context context){
+        myContext = context;
     }
 
     /**
-     * @return
+     * reads the data from the json file into an arraylist
+     *
+     * @return registry, an arraylist of type <Code>TaskDTO</Code>
      */
-    public ArrayList<TaskDTO> getTasks(){
-
+    public ArrayList<TaskDTO> getTasks() {
         ArrayList<TaskDTO> registry = new ArrayList<>();
 
         try {
-            File fileDirectory = new File(myContext.getFilesDir(), "FeedBookDir");
+            JSONArray values = load();
 
-            if(!fileDirectory.exists()){
-                fileDirectory.mkdir();
+            if (values == null) {
+                return registry;
+            } else {
+                for (int i = 1; i < values.length(); i++) {
+                    JSONObject object = (JSONObject) values.get(i);
+                    String title = object.getString("title");
+                    String description = object.getString("description");
+                    TaskDTO loadedTask = new TaskDTO(title, description);
+                    registry.add(loadedTask);
+                }
+                return registry;
             }
-            File file = new File(fileDirectory, filename);
-
-            if(!file.exists()){
-                FileWriter writer = new FileWriter(file);
-                writer.append("");
-                writer.flush();
-                writer.close();
-            }
-
-            FileInputStream stream = new FileInputStream(file);
-            DataInputStream input = new DataInputStream(stream);
-
-            byte[] buffer = new byte[1024];
-            input.read(buffer);
-            input.close();
-
-            //String jsonQuery = new String(buffer, "UTF-8");
-
-            String content = readFully(stream).toString("UTF-8");
-
-            JSONArray messages = (JSONArray) new JSONTokener(content).nextValue();
-
-
-            for (int i = 1; i < messages.length(); i++) {
-
-                JSONObject object = (JSONObject) messages.get(i);
-                String title = (String) object.get("title");
-                String descrition = (String) object.get("description");
-                TaskDTO loadedTask = new TaskDTO(title, descrition);
-                registry.add(loadedTask);
-            }
-            stream.close();
-            return registry;
-
-        } catch (Exception e) {
-
+        }catch(JSONException e){
+            Log.e("JSONReadException", e.getMessage());
         }
         return registry;
     }
 
+    /**
+     * retrieves the information stored in the json file as a <Code>JSONArray</Code>
+     *
+     * @return messages, a <Code>JSONArray</Code> of the data stored
+     */
+    private JSONArray load() throws JSONException{
 
-    // temporarily blocked
+        JSONArray messages = null;
+        try{
+            FileInputStream stream = myContext.openFileInput(filename);
+            String content = readFully(stream).toString("UTF-8");
+            messages = (JSONArray) new JSONTokener(content).nextValue();
+            stream.close();
+
+        }catch(IOException e) {
+            Log.e("JSONReadException", e.getMessage());
+        }
+        return messages;
+    }
+
     private ByteArrayOutputStream readFully(InputStream stream) throws IOException {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -121,7 +114,6 @@ public class TaskRegistry {
         try {
 
             JSONArray tasks = new JSONArray();
-
             for (TaskDTO task : tasklist) {
 
                 JSONObject object = new JSONObject();
@@ -129,26 +121,15 @@ public class TaskRegistry {
                 object.put("description", task.getDescription());
                 tasks.put(object);
             }
-            String writing = tasks.toString(2);
 
-            File fileDir = new File(myContext.getFilesDir(),"FeedBookDir");
-            //during first time app load when Directory for internal storage does not exists
-            if(!fileDir.exists()){
-                fileDir.mkdir();
-            }
-            File file = new File(fileDir, filename);
-            FileWriter writer = new FileWriter(file);
-
-            writer.write(writing);
-            writer.flush();
-            writer.close();
-
-        } catch (FileNotFoundException e) {
+           FileOutputStream output = myContext.getApplicationContext().openFileOutput(filename, myContext.MODE_PRIVATE);
+           output.write(tasks.toString().getBytes());
+           output.close();
 
         } catch (IOException e) {
-
+            Log.e("JSONWriteException", e.getMessage());
         } catch (JSONException e) {
-
+            Log.e("JSONLoadException", e.getMessage());
         }
 
     }
